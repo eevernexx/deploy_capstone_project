@@ -4,8 +4,6 @@ import numpy as np
 import pickle
 import sklearn
 from sklearn.preprocessing import StandardScaler, LabelEncoder
-import plotly.graph_objects as go
-import plotly.express as px
 
 # Set page config with custom theme
 st.set_page_config(
@@ -328,67 +326,111 @@ def preprocess_input_smart(data, label_encoders, feature_names):
     df_final = df[feature_names]
     return df_final
 
-# Create BMI gauge chart
-def create_bmi_gauge(bmi_value):
-    fig = go.Figure(go.Indicator(
-        mode = "gauge+number+delta",
-        value = bmi_value,
-        domain = {'x': [0, 1], 'y': [0, 1]},
-        title = {'text': "BMI Score", 'font': {'size': 24, 'color': '#333'}},
-        delta = {'reference': 22.5, 'increasing': {'color': "#ff6b6b"}, 'decreasing': {'color': "#51cf66"}},
-        gauge = {
-            'axis': {'range': [None, 40], 'tickcolor': '#333'},
-            'bar': {'color': "#667eea", 'thickness': 0.8},
-            'steps': [
-                {'range': [0, 18.5], 'color': "#74c0fc"},
-                {'range': [18.5, 25], 'color': "#51cf66"},
-                {'range': [25, 30], 'color': "#ffd43b"},
-                {'range': [30, 40], 'color': "#ff6b6b"}
-            ],
-            'threshold': {
-                'line': {'color': "red", 'width': 4},
-                'thickness': 0.75,
-                'value': bmi_value
-            }
-        }
-    ))
+# Create BMI progress bar visualization
+def create_bmi_display(bmi_value):
+    # BMI categories with colors
+    bmi_ranges = [
+        (0, 18.5, "Underweight", "#74c0fc"),
+        (18.5, 25, "Normal", "#51cf66"),
+        (25, 30, "Overweight", "#ffd43b"),
+        (30, 40, "Obese", "#ff6b6b")
+    ]
     
-    fig.update_layout(
-        height=300,
-        font={'color': "#333", 'family': "Poppins"},
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)'
-    )
-    return fig
+    # Determine current category
+    current_category = "Unknown"
+    current_color = "#666"
+    
+    for min_val, max_val, category, color in bmi_ranges:
+        if min_val <= bmi_value < max_val:
+            current_category = category
+            current_color = color
+            break
+    
+    # Create BMI visualization using Streamlit components
+    st.markdown(f"""
+    <div style="background: white; padding: 1.5rem; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+        <div style="text-align: center; margin-bottom: 1rem;">
+            <h3 style="color: #333; margin: 0;">BMI Score</h3>
+            <div style="font-size: 2.5rem; font-weight: 700; color: {current_color}; margin: 0.5rem 0;">
+                {bmi_value:.1f}
+            </div>
+            <div style="font-size: 1.2rem; color: {current_color}; font-weight: 600;">
+                {current_category}
+            </div>
+        </div>
+        
+        <div style="background: #f8f9fa; border-radius: 10px; padding: 1rem; margin-top: 1rem;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 0.5rem;">
+                <span>Underweight</span>
+                <span>Normal</span>
+                <span>Overweight</span>
+                <span>Obese</span>
+            </div>
+            <div style="height: 20px; background: linear-gradient(to right, #74c0fc 0%, #74c0fc 18.5%, #51cf66 18.5%, #51cf66 25%, #ffd43b 25%, #ffd43b 30%, #ff6b6b 30%); border-radius: 10px; position: relative;">
+                <div style="position: absolute; top: -5px; left: {min(max((bmi_value/40)*100, 0), 100)}%; width: 10px; height: 30px; background: #333; border-radius: 5px; transform: translateX(-50%);"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-top: 0.5rem; color: #666;">
+                <span>18.5</span>
+                <span>25</span>
+                <span>30</span>
+                <span>40+</span>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
-# Create prediction confidence chart
-def create_confidence_chart(prediction_proba, obesity_levels):
-    fig = go.Figure(data=[
-        go.Bar(
-            x=obesity_levels,
-            y=prediction_proba * 100,
-            marker_color='rgba(102, 126, 234, 0.8)',
-            marker_line_color='rgba(102, 126, 234, 1.0)',
-            marker_line_width=2,
-            hovertemplate='<b>%{x}</b><br>Confidence: %{y:.1f}%<extra></extra>'
-        )
-    ])
+# Create prediction confidence chart using Streamlit bar chart
+def create_confidence_display(prediction_proba, obesity_levels, predicted_level):
+    st.markdown("### 🎯 AI Confidence Distribution")
     
-    fig.update_layout(
-        title={
-            'text': 'AI Prediction Confidence Distribution',
-            'x': 0.5,
-            'font': {'size': 18, 'color': '#333', 'family': 'Poppins'}
-        },
-        xaxis_title="Obesity Categories",
-        yaxis_title="Confidence (%)",
-        height=400,
-        font={'color': "#333", 'family': "Poppins"},
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(255,255,255,0.8)',
-        xaxis={'tickangle': -45}
-    )
-    return fig
+    # Create DataFrame for visualization
+    conf_data = pd.DataFrame({
+        'Category': obesity_levels,
+        'Confidence': prediction_proba * 100
+    })
+    
+    # Sort by confidence
+    conf_data = conf_data.sort_values('Confidence', ascending=False)
+    
+    # Display as horizontal bars with custom styling
+    for idx, row in conf_data.iterrows():
+        category = row['Category']
+        confidence = row['Confidence']
+        
+        # Highlight the predicted category
+        if category == predicted_level:
+            bar_color = "#667eea"
+            text_weight = "bold"
+            bg_color = "rgba(102, 126, 234, 0.1)"
+        else:
+            bar_color = "#e9ecef"
+            text_weight = "normal"
+            bg_color = "transparent"
+        
+        # Translation for display
+        level_translation = {
+            'Insufficient_Weight': 'Berat Badan Kurang',
+            'Normal_Weight': 'Berat Badan Normal',
+            'Overweight_Level_I': 'Kelebihan BB Tingkat I',
+            'Overweight_Level_II': 'Kelebihan BB Tingkat II',
+            'Obesity_Type_I': 'Obesitas Tipe I',
+            'Obesity_Type_II': 'Obesitas Tipe II',
+            'Obesity_Type_III': 'Obesitas Tipe III'
+        }
+        
+        display_name = level_translation.get(category, category)
+        
+        st.markdown(f"""
+        <div style="background: {bg_color}; padding: 0.5rem; border-radius: 8px; margin: 0.3rem 0;">
+            <div style="display: flex; justify-content: space-between; align-items: center; font-weight: {text_weight};">
+                <span style="color: #333; font-size: 0.9rem;">{display_name}</span>
+                <span style="color: {bar_color}; font-weight: bold;">{confidence:.1f}%</span>
+            </div>
+            <div style="background: #f1f3f4; height: 8px; border-radius: 4px; margin-top: 0.3rem;">
+                <div style="background: {bar_color}; height: 100%; width: {confidence}%; border-radius: 4px; transition: width 0.5s ease;"></div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
 # Main app
 def main():
@@ -494,7 +536,7 @@ def main():
             """, unsafe_allow_html=True)
             
             # BMI gauge
-            st.plotly_chart(create_bmi_gauge(bmi_preview), use_container_width=True, config={'displayModeBar': False})
+            create_bmi_display(bmi_preview)
     
     # Predict button with enhanced styling
     if st.button("🔍 ANALISIS DENGAN AI", key="predict_btn"):
@@ -607,7 +649,7 @@ def main():
                     """, unsafe_allow_html=True)
                 
                 # Confidence distribution chart
-                st.plotly_chart(create_confidence_chart(prediction_proba, obesity_levels), use_container_width=True, config={'displayModeBar': False})
+                create_confidence_display(prediction_proba, obesity_levels, predicted_level)
                 
                 # Enhanced recommendations
                 st.markdown('<div class="recommendation-card">', unsafe_allow_html=True)
