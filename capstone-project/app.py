@@ -130,15 +130,13 @@ def preprocess_input(data):
     }
     df['MTRANS'] = df['MTRANS'].map(mtrans_mapping)
     
-    # 2. Calculate BMI (yang missing di error)
-    df['BMI'] = df['Weight'] / (df['Height'] ** 2)
+    # 2. JANGAN tambah BMI - kemungkinan model ga expect BMI
     
-    # 3. Reorder columns sesuai dengan yang diexpect model
-    # Berdasarkan error, urutan yang benar kemungkinan:
+    # 3. Urutan feature tanpa BMI
     feature_order = [
         'Gender', 'Age', 'Height', 'Weight', 'family_history_with_overweight',
         'FAVC', 'FCVC', 'NCP', 'CAEC', 'SMOKE', 'CH2O', 'SCC', 'FAF', 'TUE', 
-        'CALC', 'MTRANS', 'BMI'
+        'CALC', 'MTRANS'
     ]
     
     # Pastikan semua kolom ada dan dalam urutan yang benar
