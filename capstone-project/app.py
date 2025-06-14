@@ -67,79 +67,122 @@ st.markdown("""
 @st.cache_resource
 def load_model():
     try:
-        # Load model optimal dari subfolder capstone-project
-        model_path = 'capstone-project/model_obesitas_optimal.pkl'
-        scaler_path = 'capstone-project/scaler.pkl'
-        
-        # Load model
-        model = pickle.load(open(model_path, 'rb'))
-        model_name = "Model Obesitas Optimal"
-        
-        # Load scaler
-        scaler = pickle.load(open(scaler_path, 'rb'))
-        
-        return model, scaler, model_name
+        # Try loading the new simple model first
+        try:
+            model = pickle.load(open('capstone-project/model_simple.pkl', 'rb'))
+            scaler = pickle.load(open('capstone-project/scaler_simple.pkl', 'rb'))
+            label_encoders = pickle.load(open('capstone-project/label_encoders.pkl', 'rb'))
+            feature_names = pickle.load(open('capstone-project/feature_names.pkl', 'rb'))
+            model_name = "Model Simple (Compatible)"
+            return model, scaler, label_encoders, feature_names, model_name
+        except FileNotFoundError:
+            # Fallback to old model
+            model = pickle.load(open('capstone-project/model_obesitas_optimal.pkl', 'rb'))
+            scaler = pickle.load(open('capstone-project/scaler.pkl', 'rb'))
+            model_name = "Model Obesitas Optimal"
+            return model, scaler, None, None, model_name
         
     except FileNotFoundError as e:
-        st.error(f"❌ File tidak ditemukan: {str(e)}")
-        st.info("💡 Pastikan file model dan scaler ada di folder capstone-project/")
-        return None, None, None
+        st.error("❌ Model files tidak ditemukan!")
+        st.error("📁 File yang dibutuhkan:")
+        st.error("• model_simple.pkl (recommended) ATAU model_obesitas_optimal.pkl")
+        st.error("• scaler_simple.pkl ATAU scaler.pkl")
+        st.error("• label_encoders.pkl (untuk model simple)")
+        st.error("• feature_names.pkl (untuk model simple)")
+        st.info("💡 Jalankan kode di Colab untuk generate model simple.")
+        return None, None, None, None, None
         
     except Exception as e:
         st.error(f"❌ Error loading model: {str(e)}")
-        return None, None, None
+        return None, None, None, None, None
 
-# Function untuk preprocessing input sesuai dengan Colab
-def preprocess_input(data):
+# Function untuk preprocessing input - SIMPLE VERSION
+def preprocess_input_simple(data, label_encoders, feature_names):
     """
-    Preprocessing sesuai dengan yang dilakukan di Google Colab
+    Preprocessing untuk model simple yang pakai LabelEncoder
+    """
+    
+    # Buat DataFrame
+    df = pd.DataFrame([data])
+    
+    # Encoding pakai LabelEncoder yang udah di-save
+    
+    # Gender: Female=0, Male=1 (biasanya alphabetical)
+    gender_map = {'Female': 0, 'Male': 1}
+    df['Gender'] = df['Gender'].map(gender_map)
+    
+    # family_history_with_overweight: no=0, yes=1
+    family_map = {'no': 0, 'yes': 1}  
+    df['family_history_with_overweight'] = df['family_history_with_overweight'].map(family_map)
+    
+    # FAVC: no=0, yes=1
+    favc_map = {'no': 0, 'yes': 1}
+    df['FAVC'] = df['FAVC'].map(favc_map)
+    
+    # CAEC: Always, Frequently, Sometimes, no (alphabetical)
+    caec_map = {'Always': 0, 'Frequently': 1, 'Sometimes': 2, 'no': 3}
+    df['CAEC'] = df['CAEC'].map(caec_map)
+    
+    # SMOKE: no=0, yes=1
+    smoke_map = {'no': 0, 'yes': 1}
+    df['SMOKE'] = df['SMOKE'].map(smoke_map)
+    
+    # SCC: no=0, yes=1
+    scc_map = {'no': 0, 'yes': 1}
+    df['SCC'] = df['SCC'].map(scc_map)
+    
+    # CALC: Always, Frequently, Sometimes, no
+    calc_map = {'Always': 0, 'Frequently': 1, 'Sometimes': 2, 'no': 3}
+    df['CALC'] = df['CALC'].map(calc_map)
+    
+    # MTRANS: Automobile, Bike, Motorbike, Public_Transportation, Walking
+    mtrans_map = {
+        'Automobile': 0, 'Bike': 1, 'Motorbike': 2, 
+        'Public_Transportation': 3, 'Walking': 4
+    }
+    df['MTRANS'] = df['MTRANS'].map(mtrans_map)
+    
+    # Reorder columns sesuai feature_names
+    df_final = df[feature_names]
+    
+    return df_final
+
+# Function untuk preprocessing input - FALLBACK VERSION  
+def preprocess_input_fallback(data):
+    """
+    Preprocessing untuk model lama
     """
     
     # Buat DataFrame dari input data
     df = pd.DataFrame([data])
     
-    # 1. Encoding categorical variables
-    
-    # Gender encoding (Male=1, Female=0)
+    # Encoding seperti sebelumnya
     df['Gender'] = df['Gender'].map({'Male': 1, 'Female': 0})
-    
-    # family_history_with_overweight (yes=1, no=0)
     df['family_history_with_overweight'] = df['family_history_with_overweight'].map({'yes': 1, 'no': 0})
-    
-    # FAVC - Frequent consumption of high caloric food (yes=1, no=0)
     df['FAVC'] = df['FAVC'].map({'yes': 1, 'no': 0})
     
-    # CAEC - Consumption of food between meals
     caec_mapping = {'no': 0, 'Sometimes': 1, 'Frequently': 2, 'Always': 3}
     df['CAEC'] = df['CAEC'].map(caec_mapping)
     
-    # SMOKE (yes=1, no=0)
     df['SMOKE'] = df['SMOKE'].map({'yes': 1, 'no': 0})
-    
-    # SCC - Calories consumption monitoring (yes=1, no=0)
     df['SCC'] = df['SCC'].map({'yes': 1, 'no': 0})
     
-    # CALC - Alcohol consumption
     calc_mapping = {'no': 0, 'Sometimes': 1, 'Frequently': 2, 'Always': 3}
     df['CALC'] = df['CALC'].map(calc_mapping)
     
-    # MTRANS - Transportation used
     mtrans_mapping = {
         'Walking': 0, 'Bike': 1, 'Motorbike': 2, 
         'Public_Transportation': 3, 'Automobile': 4
     }
     df['MTRANS'] = df['MTRANS'].map(mtrans_mapping)
     
-    # 2. JANGAN tambah BMI - kemungkinan model ga expect BMI
-    
-    # 3. Urutan feature tanpa BMI
+    # Urutan feature tanpa BMI
     feature_order = [
         'Gender', 'Age', 'Height', 'Weight', 'family_history_with_overweight',
         'FAVC', 'FCVC', 'NCP', 'CAEC', 'SMOKE', 'CH2O', 'SCC', 'FAF', 'TUE', 
         'CALC', 'MTRANS'
     ]
     
-    # Pastikan semua kolom ada dan dalam urutan yang benar
     df_final = df[feature_order]
     
     return df_final
@@ -150,7 +193,7 @@ def main():
     st.markdown('<p class="sub-header">📊 Aplikasi Machine Learning untuk memprediksi tingkat obesitas berdasarkan gaya hidup dan kondisi fisik</p>', unsafe_allow_html=True)
     
     # Load model
-    model, scaler, model_name = load_model()
+    model, scaler, label_encoders, feature_names, model_name = load_model()
     
     if model is None:
         st.stop()
@@ -158,12 +201,16 @@ def main():
     # Success message if model loaded
     st.success(f"✅ {model_name} berhasil dimuat!")
     
+    # Show model info
+    if feature_names:
+        st.info(f"🔍 Model menggunakan {len(feature_names)} features")
+    
     # Debug: Show feature names that model expects
     try:
         if hasattr(model, 'feature_names_in_'):
-            st.info(f"🔍 Model expects these features: {list(model.feature_names_in_)}")
-        elif hasattr(model, 'n_features_'):
-            st.info(f"🔍 Model expects {model.n_features_} features")
+            st.info(f"🎯 Model expects: {list(model.feature_names_in_)}")
+        elif feature_names:
+            st.info(f"🎯 Features: {feature_names}")
     except:
         pass
     
@@ -239,27 +286,21 @@ def main():
             }
             
             try:
-                # Preprocess input
-                processed_data = preprocess_input(input_data)
+                # Pilih preprocessing method berdasarkan model yang dimuat
+                if label_encoders and feature_names:
+                    # Pakai preprocessing untuk model simple
+                    processed_data = preprocess_input_simple(input_data, label_encoders, feature_names)
+                    st.success("✅ Menggunakan preprocessing simple (compatible)")
+                else:
+                    # Pakai preprocessing fallback untuk model lama
+                    processed_data = preprocess_input_fallback(input_data)
+                    st.warning("⚠️ Menggunakan preprocessing fallback")
                 
                 # Debug: Show processed data columns
-                st.write("🔍 **Debug - Processed data columns:**")
+                st.write("🔍 **Debug - Processed data:**")
                 st.write(f"Columns: {list(processed_data.columns)}")
                 st.write(f"Shape: {processed_data.shape}")
-                
-                # Try to get model's expected features
-                try:
-                    if hasattr(model, 'feature_names_in_'):
-                        expected_features = list(model.feature_names_in_)
-                        st.write(f"🎯 **Model expects:** {expected_features}")
-                        
-                        # Reorder processed data to match model expectations
-                        processed_data = processed_data[expected_features]
-                        st.success("✅ Feature order matched!")
-                    else:
-                        st.warning("⚠️ Model doesn't have feature_names_in_ attribute")
-                except Exception as e:
-                    st.error(f"Error checking model features: {e}")
+                st.write(f"Values: {processed_data.iloc[0].tolist()}")
                 
                 # Scale the data
                 input_scaled = scaler.transform(processed_data)
