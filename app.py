@@ -73,34 +73,24 @@ def load_model():
         # Load scaler yang matching dengan model
         try:
             scaler = pickle.load(open('scaler_simple.pkl', 'rb'))
-            st.success("✅ scaler_simple.pkl loaded (matching model)")
         except FileNotFoundError:
             scaler = pickle.load(open('scaler_OLD.pkl', 'rb'))
-            st.warning("⚠️ Using scaler_OLD.pkl - may have compatibility issues")
-            st.info("💡 For best results, upload scaler_simple.pkl")
         
-        # Load label encoders yang working
+        # Load label encoders
         label_encoders = pickle.load(open('label_encoders.pkl', 'rb'))
-        st.success("✅ label_encoders.pkl loaded")
         
-        # Load feature names yang working
+        # Load feature names
         feature_names = pickle.load(open('feature_names.pkl', 'rb'))
-        st.success("✅ feature_names.pkl loaded")
         
-        # Coba load model simple dulu, kalau ga ada pakai yang lama
+        # Load model simple
         model = None
         model_name = ""
         
         try:
             model = pickle.load(open('model_simple.pkl', 'rb'))
             model_name = "Model Simple (New)"
-            st.success("✅ model_simple.pkl loaded")
         except FileNotFoundError:
-            st.warning("⚠️ model_simple.pkl not found, need to upload this file")
-            st.info("💡 Please upload model_simple.pkl to root directory")
             return None, None, None, None, None
-        
-        st.success("🎉 ALL WORKING FILES LOADED!")
         
         return model, scaler, label_encoders, feature_names, model_name
         
@@ -114,25 +104,18 @@ def preprocess_input_smart(data, label_encoders, feature_names):
     Preprocessing yang smart - adaptif dengan file yang ada
     """
     
-    st.write(f"🔍 **Expected features:** {feature_names}")
-    
     # Buat DataFrame
     df = pd.DataFrame([data])
     
     # Encoding berdasarkan label_encoders yang ada
-    # (Ini lebih akurat karena pakai encoder yang sama dengan training)
-    
     # Gender encoding
     if 'gender' in label_encoders:
         gender_encoder = label_encoders['gender']
-        # Mapping manual berdasarkan classes_
         if hasattr(gender_encoder, 'classes_'):
             classes = gender_encoder.classes_
-            # Female biasanya 0, Male biasanya 1 (alphabetical)
             gender_map = {cls: idx for idx, cls in enumerate(classes)}
             df['Gender'] = df['Gender'].map(gender_map)
         else:
-            # Fallback manual
             df['Gender'] = df['Gender'].map({'Female': 0, 'Male': 1})
     else:
         df['Gender'] = df['Gender'].map({'Female': 0, 'Male': 1})
@@ -169,18 +152,11 @@ def preprocess_input_smart(data, label_encoders, feature_names):
         if col not in df.columns:
             if col == 'BMI':
                 df['BMI'] = df['Weight'] / (df['Height'] ** 2)
-                st.write("✅ BMI calculated and added")
             else:
                 df[col] = 0
-                st.write(f"⚠️ {col} set to default value 0")
     
     # Reorder sesuai feature_names EXACT ORDER
-    df_final = df[feature_names]  # Ini akan otomatis reorder sesuai urutan feature_names
-    
-    st.write(f"🔍 **Expected order:** {feature_names}")
-    st.write(f"🔍 **Final columns:** {list(df_final.columns)}")
-    st.write(f"🔍 **Final shape:** {df_final.shape}")
-    st.write(f"🔍 **Order match:** {list(df_final.columns) == feature_names}")
+    df_final = df[feature_names]
     
     return df_final
 
@@ -193,15 +169,17 @@ def main():
     model, scaler, label_encoders, feature_names, model_name = load_model()
     
     if model is None:
-        st.error("❌ Please upload model_simple.pkl to continue")
-        st.info("💡 Steps: Go to GitHub → Upload model_simple.pkl to root directory → Refresh this app")
+        st.error("❌ Model tidak dapat dimuat")
         st.stop()
     
     # Success message
-    st.success(f"✅ {model_name} berhasil dimuat!")
-    st.info(f"🔍 Model menggunakan {len(feature_names)} features")
+    st.success(f"✅ {model_name} siap digunakan!")
     
-    # Input fields
+    # Sidebar untuk input
+    st.sidebar.header("📋 Input Data Responden")
+    st.sidebar.markdown("Silakan isi semua informasi berikut:")
+    
+    # Input fields dengan layout yang rapi
     col1, col2 = st.columns(2)
     
     with col1:
@@ -273,16 +251,6 @@ def main():
                 processed_data = preprocess_input_smart(input_data, label_encoders, feature_names)
                 
                 # Scale data
-                st.write(f"🔍 **Before scaling - column order:** {list(processed_data.columns)}")
-                st.write(f"🔍 **Expected by model:** {feature_names}")
-                st.write(f"🔍 **Match:** {list(processed_data.columns) == feature_names}")
-                
-                # Ensure exact order match
-                if list(processed_data.columns) != feature_names:
-                    st.warning("⚠️ Column order mismatch! Reordering...")
-                    processed_data = processed_data[feature_names]
-                    st.write(f"🔍 **After reorder:** {list(processed_data.columns)}")
-                
                 input_scaled = scaler.transform(processed_data)
                 
                 # Make prediction
