@@ -244,6 +244,25 @@ def main():
                 # Preprocess input
                 processed_data = preprocess_input(input_data)
                 
+                # Debug: Show processed data columns
+                st.write("🔍 **Debug - Processed data columns:**")
+                st.write(f"Columns: {list(processed_data.columns)}")
+                st.write(f"Shape: {processed_data.shape}")
+                
+                # Try to get model's expected features
+                try:
+                    if hasattr(model, 'feature_names_in_'):
+                        expected_features = list(model.feature_names_in_)
+                        st.write(f"🎯 **Model expects:** {expected_features}")
+                        
+                        # Reorder processed data to match model expectations
+                        processed_data = processed_data[expected_features]
+                        st.success("✅ Feature order matched!")
+                    else:
+                        st.warning("⚠️ Model doesn't have feature_names_in_ attribute")
+                except Exception as e:
+                    st.error(f"Error checking model features: {e}")
+                
                 # Scale the data
                 input_scaled = scaler.transform(processed_data)
                 
