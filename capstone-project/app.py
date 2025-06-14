@@ -69,8 +69,8 @@ def load_model():
     try:
         # Try loading the new simple model first
         try:
-            model = pickle.load(open('model_simple.pkl', 'rb'))
-            scaler = pickle.load(open('scaler_simple.pkl', 'rb'))
+            model = pickle.load(open('model_obesitas_optimal_OLD.pkl', 'rb'))
+            scaler = pickle.load(open('scaler_OLD.pkl', 'rb'))
             label_encoders = pickle.load(open('label_encoders.pkl', 'rb'))
             feature_names = pickle.load(open('feature_names.pkl', 'rb'))
             model_name = "Model Simple (Compatible)"
