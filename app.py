@@ -169,11 +169,13 @@ def preprocess_input_smart(data, label_encoders, feature_names):
                 df[col] = 0
                 st.write(f"⚠️ {col} set to default value 0")
     
-    # Reorder sesuai feature_names
-    df_final = df[feature_names]
+    # Reorder sesuai feature_names EXACT ORDER
+    df_final = df[feature_names]  # Ini akan otomatis reorder sesuai urutan feature_names
     
+    st.write(f"🔍 **Expected order:** {feature_names}")
     st.write(f"🔍 **Final columns:** {list(df_final.columns)}")
     st.write(f"🔍 **Final shape:** {df_final.shape}")
+    st.write(f"🔍 **Order match:** {list(df_final.columns) == feature_names}")
     
     return df_final
 
@@ -266,6 +268,16 @@ def main():
                 processed_data = preprocess_input_smart(input_data, label_encoders, feature_names)
                 
                 # Scale data
+                st.write(f"🔍 **Before scaling - column order:** {list(processed_data.columns)}")
+                st.write(f"🔍 **Expected by model:** {feature_names}")
+                st.write(f"🔍 **Match:** {list(processed_data.columns) == feature_names}")
+                
+                # Ensure exact order match
+                if list(processed_data.columns) != feature_names:
+                    st.warning("⚠️ Column order mismatch! Reordering...")
+                    processed_data = processed_data[feature_names]
+                    st.write(f"🔍 **After reorder:** {list(processed_data.columns)}")
+                
                 input_scaled = scaler.transform(processed_data)
                 
                 # Make prediction
