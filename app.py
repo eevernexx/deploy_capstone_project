@@ -4,6 +4,9 @@ import numpy as np
 import pickle
 import sklearn
 from sklearn.preprocessing import StandardScaler, LabelEncoder
+import plotly.express as px
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 # Set page config
 st.set_page_config(
