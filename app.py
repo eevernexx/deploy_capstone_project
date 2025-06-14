@@ -346,30 +346,33 @@ def create_bmi_display(bmi_value):
             current_color = color
             break
     
+    # Calculate position for indicator
+    position_percent = min(max((bmi_value/40)*100, 0), 100)
+    
     # Create BMI visualization using Streamlit components
     st.markdown(f"""
-    <div style="background: white; padding: 1.5rem; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+    <div style="background: white; padding: 1.5rem; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin: 1rem 0;">
         <div style="text-align: center; margin-bottom: 1rem;">
-            <h3 style="color: #333; margin: 0;">BMI Score</h3>
-            <div style="font-size: 2.5rem; font-weight: 700; color: {current_color}; margin: 0.5rem 0;">
+            <h3 style="color: #333; margin: 0; font-family: 'Poppins', sans-serif;">BMI Score</h3>
+            <div style="font-size: 2.5rem; font-weight: 700; color: {current_color}; margin: 0.5rem 0; font-family: 'Poppins', sans-serif;">
                 {bmi_value:.1f}
             </div>
-            <div style="font-size: 1.2rem; color: {current_color}; font-weight: 600;">
+            <div style="font-size: 1.2rem; color: {current_color}; font-weight: 600; font-family: 'Poppins', sans-serif;">
                 {current_category}
             </div>
         </div>
         
         <div style="background: #f8f9fa; border-radius: 10px; padding: 1rem; margin-top: 1rem;">
-            <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 0.5rem;">
-                <span>Underweight</span>
+            <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 0.5rem; font-family: 'Poppins', sans-serif;">
+                <span>Under</span>
                 <span>Normal</span>
-                <span>Overweight</span>
+                <span>Over</span>
                 <span>Obese</span>
             </div>
-            <div style="height: 20px; background: linear-gradient(to right, #74c0fc 0%, #74c0fc 18.5%, #51cf66 18.5%, #51cf66 25%, #ffd43b 25%, #ffd43b 30%, #ff6b6b 30%); border-radius: 10px; position: relative;">
-                <div style="position: absolute; top: -5px; left: {min(max((bmi_value/40)*100, 0), 100)}%; width: 10px; height: 30px; background: #333; border-radius: 5px; transform: translateX(-50%);"></div>
+            <div style="height: 20px; background: linear-gradient(to right, #74c0fc 0%, #74c0fc 18.5%, #51cf66 18.5%, #51cf66 25%, #ffd43b 25%, #ffd43b 30%, #ff6b6b 30%, #ff6b6b 100%); border-radius: 10px; position: relative;">
+                <div style="position: absolute; top: -5px; left: {position_percent}%; width: 10px; height: 30px; background: #333; border-radius: 5px; transform: translateX(-50%); box-shadow: 0 2px 6px rgba(0,0,0,0.3);"></div>
             </div>
-            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-top: 0.5rem; color: #666;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-top: 0.5rem; color: #666; font-family: 'Poppins', sans-serif;">
                 <span>18.5</span>
                 <span>25</span>
                 <span>30</span>
