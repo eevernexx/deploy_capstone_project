@@ -67,29 +67,24 @@ st.markdown("""
 @st.cache_resource
 def load_model():
     try:
-        # Try loading the new simple model first
-        try:
-            model = pickle.load(open('capstone-project/model_simple.pkl', 'rb'))
-            scaler = pickle.load(open('capstone-project/scaler_simple.pkl', 'rb'))
-            label_encoders = pickle.load(open('capstone-project/label_encoders.pkl', 'rb'))
-            feature_names = pickle.load(open('capstone-project/feature_names.pkl', 'rb'))
-            model_name = "Model Simple (Compatible)"
-            return model, scaler, label_encoders, feature_names, model_name
-        except FileNotFoundError:
-            # Fallback to old model
-            model = pickle.load(open('capstone-project/model_obesitas_optimal.pkl', 'rb'))
-            scaler = pickle.load(open('capstone-project/scaler.pkl', 'rb'))
-            model_name = "Model Obesitas Optimal"
-            return model, scaler, None, None, model_name
+        # HANYA load model simple - ga ada fallback lagi!
+        model = pickle.load(open('capstone-project/model_simple.pkl', 'rb'))
+        scaler = pickle.load(open('capstone-project/scaler_simple.pkl', 'rb'))
+        label_encoders = pickle.load(open('capstone-project/label_encoders.pkl', 'rb'))
+        feature_names = pickle.load(open('capstone-project/feature_names.pkl', 'rb'))
+        model_name = "Model Simple (Compatible)"
+        
+        return model, scaler, label_encoders, feature_names, model_name
         
     except FileNotFoundError as e:
-        st.error("❌ Model files tidak ditemukan!")
-        st.error("📁 File yang dibutuhkan:")
-        st.error("• model_simple.pkl (recommended) ATAU model_obesitas_optimal.pkl")
-        st.error("• scaler_simple.pkl ATAU scaler.pkl")
-        st.error("• label_encoders.pkl (untuk model simple)")
-        st.error("• feature_names.pkl (untuk model simple)")
-        st.info("💡 Jalankan kode di Colab untuk generate model simple.")
+        st.error("❌ Model simple files tidak ditemukan!")
+        st.error(f"Missing file: {str(e)}")
+        st.error("📁 File yang WAJIB ada:")
+        st.error("• model_simple.pkl")
+        st.error("• scaler_simple.pkl") 
+        st.error("• label_encoders.pkl")
+        st.error("• feature_names.pkl")
+        st.info("💡 Pastikan semua file udah diupload ke folder capstone-project/")
         return None, None, None, None, None
         
     except Exception as e:
@@ -299,21 +294,8 @@ def main():
             }
             
             try:
-                # Pilih preprocessing method berdasarkan model yang dimuat
-                if label_encoders and feature_names:
-                    # Pakai preprocessing untuk model simple
-                    processed_data = preprocess_input_simple(input_data, label_encoders, feature_names)
-                    st.success("✅ Menggunakan preprocessing simple (compatible)")
-                else:
-                    # Pakai preprocessing fallback untuk model lama
-                    processed_data = preprocess_input_fallback(input_data)
-                    st.warning("⚠️ Menggunakan preprocessing fallback")
-                
-                # Debug: Show processed data columns
-                st.write("🔍 **Debug - Processed data:**")
-                st.write(f"Columns: {list(processed_data.columns)}")
-                st.write(f"Shape: {processed_data.shape}")
-                st.write(f"Values: {processed_data.iloc[0].tolist()}")
+                # Pakai preprocessing simple (hanya ada satu opsi sekarang)
+                processed_data = preprocess_input_simple(input_data, label_encoders, feature_names)
                 
                 # Scale the data
                 input_scaled = scaler.transform(processed_data)
