@@ -70,9 +70,14 @@ def load_model():
         # Pakai file yang ADA dan WORKING
         st.write("🔄 Loading files...")
         
-        # Load scaler yang working
-        scaler = pickle.load(open('scaler_OLD.pkl', 'rb'))
-        st.success("✅ scaler_OLD.pkl loaded")
+        # Load scaler yang matching dengan model
+        try:
+            scaler = pickle.load(open('scaler_simple.pkl', 'rb'))
+            st.success("✅ scaler_simple.pkl loaded (matching model)")
+        except FileNotFoundError:
+            scaler = pickle.load(open('scaler_OLD.pkl', 'rb'))
+            st.warning("⚠️ Using scaler_OLD.pkl - may have compatibility issues")
+            st.info("💡 For best results, upload scaler_simple.pkl")
         
         # Load label encoders yang working
         label_encoders = pickle.load(open('label_encoders.pkl', 'rb'))
