@@ -66,35 +66,46 @@ st.markdown("""
 # Load model dan preprocessing objects
 @st.cache_resource
 def load_model():
+    # Debug: Cek file apa aja yang ada
+    import os
+    st.write("🔍 **Debug - Files in current directory:**")
+    files_in_dir = os.listdir('.')
+    for file in sorted(files_in_dir):
+        file_size = os.path.getsize(file) if os.path.isfile(file) else "folder"
+        st.write(f"• {file} ({file_size} bytes)")
+    
     try:
-        # Load model optimal yang sudah ada di repository
+        # Cek apakah file ada
+        if not os.path.exists('model_obesitas_optimal.pkl'):
+            st.error("❌ model_obesitas_optimal.pkl TIDAK DITEMUKAN!")
+            return None, None, None
+            
+        if not os.path.exists('scaler.pkl'):
+            st.error("❌ scaler.pkl TIDAK DITEMUKAN!")
+            return None, None, None
+        
+        st.success("✅ Kedua file ditemukan!")
+        
+        # Load model optimal
+        st.write("🔄 Loading model...")
         model = pickle.load(open('model_obesitas_optimal.pkl', 'rb'))
         model_name = "Model Obesitas Optimal"
+        st.success(f"✅ Model loaded: {type(model).__name__}")
         
         # Load scaler
+        st.write("🔄 Loading scaler...")
         scaler = pickle.load(open('scaler.pkl', 'rb'))
+        st.success(f"✅ Scaler loaded: {type(scaler).__name__}")
         
         return model, scaler, model_name
         
     except FileNotFoundError as e:
-        st.error("❌ Model files tidak ditemukan!")
-        st.error("📁 File yang dibutuhkan:")
-        st.error("• model_obesitas_optimal.pkl")
-        st.error("• scaler.pkl")
-        st.info("💡 Pastikan kedua file ada di GitHub repository.")
+        st.error(f"❌ File tidak ditemukan: {str(e)}")
         return None, None, None
         
     except Exception as e:
-        st.error(f"❌ Error loading model: {str(e)}")
-        st.error("🔧 Possible solutions:")
-        st.error("1. Model mungkin dibuat dengan Python/sklearn version yang berbeda")
-        st.error("2. Coba re-create model dengan pickle protocol yang lebih rendah")
-        st.code("""
-# Di Google Colab, coba buat ulang dengan:
-import pickle
-with open('model_obesitas_optimal.pkl', 'wb') as f:
-    pickle.dump(model, f, protocol=2)
-        """)
+        st.error(f"❌ Error loading: {str(e)}")
+        st.error(f"Error type: {type(e).__name__}")
         return None, None, None
 
 # Function untuk preprocessing input sesuai dengan Colab
