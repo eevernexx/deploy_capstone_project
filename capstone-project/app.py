@@ -66,59 +66,27 @@ st.markdown("""
 # Load model dan preprocessing objects
 @st.cache_resource
 def load_model():
-    # Debug: Cek file apa aja yang ada
-    import os
-    st.write("🔍 **Debug - Files in current directory:**")
-    files_in_dir = os.listdir('.')
-    for file in sorted(files_in_dir):
-        file_size = os.path.getsize(file) if os.path.isfile(file) else "folder"
-        st.write(f"• {file} ({file_size} bytes)")
-    
-    # Cek isi folder capstone-project
-    if os.path.exists('capstone-project'):
-        st.write("\n📂 **Files in capstone-project folder:**")
-        capstone_files = os.listdir('capstone-project')
-        for file in sorted(capstone_files):
-            file_path = os.path.join('capstone-project', file)
-            file_size = os.path.getsize(file_path) if os.path.isfile(file_path) else "folder"
-            st.write(f"• {file} ({file_size} bytes)")
-    
     try:
-        # Path yang benar - ada di subfolder capstone-project
+        # Load model optimal dari subfolder capstone-project
         model_path = 'capstone-project/model_obesitas_optimal.pkl'
         scaler_path = 'capstone-project/scaler.pkl'
         
-        # Cek apakah file ada
-        if not os.path.exists(model_path):
-            st.error(f"❌ {model_path} TIDAK DITEMUKAN!")
-            return None, None, None
-            
-        if not os.path.exists(scaler_path):
-            st.error(f"❌ {scaler_path} TIDAK DITEMUKAN!")
-            return None, None, None
-        
-        st.success("✅ Kedua file ditemukan di capstone-project folder!")
-        
-        # Load model optimal
-        st.write("🔄 Loading model...")
+        # Load model
         model = pickle.load(open(model_path, 'rb'))
         model_name = "Model Obesitas Optimal"
-        st.success(f"✅ Model loaded: {type(model).__name__}")
         
         # Load scaler
-        st.write("🔄 Loading scaler...")
         scaler = pickle.load(open(scaler_path, 'rb'))
-        st.success(f"✅ Scaler loaded: {type(scaler).__name__}")
         
         return model, scaler, model_name
         
     except FileNotFoundError as e:
         st.error(f"❌ File tidak ditemukan: {str(e)}")
+        st.info("💡 Pastikan file model dan scaler ada di folder capstone-project/")
         return None, None, None
         
     except Exception as e:
-        st.error(f"❌ Error loading: {str(e)}")
-        st.error(f"Error type: {type(e).__name__}")
+        st.error(f"❌ Error loading model: {str(e)}")
         return None, None, None
 
 # Function untuk preprocessing input sesuai dengan Colab
@@ -127,48 +95,56 @@ def preprocess_input(data):
     Preprocessing sesuai dengan yang dilakukan di Google Colab
     """
     
-    # Urutan kolom sesuai dengan dataset asli (berdasarkan Colab)
-    columns_order = [
-        'Gender', 'Age', 'Height', 'Weight', 'family_history_with_overweight',
-        'FAVC', 'FCVC', 'NCP', 'CAEC', 'SMOKE', 'CH2O', 'SCC', 'FAF', 'TUE', 'CALC', 'MTRANS'
-    ]
+    # Buat DataFrame dari input data
+    df = pd.DataFrame([data])
     
-    # Create DataFrame dengan urutan kolom yang benar
-    df = pd.DataFrame([data], columns=columns_order)
+    # 1. Encoding categorical variables
     
-    # Encoding sesuai dengan yang dilakukan di Colab
-    
-    # 1. Gender encoding (Male=1, Female=0)
+    # Gender encoding (Male=1, Female=0)
     df['Gender'] = df['Gender'].map({'Male': 1, 'Female': 0})
     
-    # 2. family_history_with_overweight (yes=1, no=0)
+    # family_history_with_overweight (yes=1, no=0)
     df['family_history_with_overweight'] = df['family_history_with_overweight'].map({'yes': 1, 'no': 0})
     
-    # 3. FAVC - Frequent consumption of high caloric food (yes=1, no=0)
+    # FAVC - Frequent consumption of high caloric food (yes=1, no=0)
     df['FAVC'] = df['FAVC'].map({'yes': 1, 'no': 0})
     
-    # 4. CAEC - Consumption of food between meals
+    # CAEC - Consumption of food between meals
     caec_mapping = {'no': 0, 'Sometimes': 1, 'Frequently': 2, 'Always': 3}
     df['CAEC'] = df['CAEC'].map(caec_mapping)
     
-    # 5. SMOKE (yes=1, no=0)
+    # SMOKE (yes=1, no=0)
     df['SMOKE'] = df['SMOKE'].map({'yes': 1, 'no': 0})
     
-    # 6. SCC - Calories consumption monitoring (yes=1, no=0)
+    # SCC - Calories consumption monitoring (yes=1, no=0)
     df['SCC'] = df['SCC'].map({'yes': 1, 'no': 0})
     
-    # 7. CALC - Alcohol consumption
+    # CALC - Alcohol consumption
     calc_mapping = {'no': 0, 'Sometimes': 1, 'Frequently': 2, 'Always': 3}
     df['CALC'] = df['CALC'].map(calc_mapping)
     
-    # 8. MTRANS - Transportation used
+    # MTRANS - Transportation used
     mtrans_mapping = {
         'Walking': 0, 'Bike': 1, 'Motorbike': 2, 
         'Public_Transportation': 3, 'Automobile': 4
     }
     df['MTRANS'] = df['MTRANS'].map(mtrans_mapping)
     
-    return df
+    # 2. Calculate BMI (yang missing di error)
+    df['BMI'] = df['Weight'] / (df['Height'] ** 2)
+    
+    # 3. Reorder columns sesuai dengan yang diexpect model
+    # Berdasarkan error, urutan yang benar kemungkinan:
+    feature_order = [
+        'Gender', 'Age', 'Height', 'Weight', 'family_history_with_overweight',
+        'FAVC', 'FCVC', 'NCP', 'CAEC', 'SMOKE', 'CH2O', 'SCC', 'FAF', 'TUE', 
+        'CALC', 'MTRANS', 'BMI'
+    ]
+    
+    # Pastikan semua kolom ada dan dalam urutan yang benar
+    df_final = df[feature_order]
+    
+    return df_final
 
 # Main app
 def main():
@@ -183,6 +159,15 @@ def main():
     
     # Success message if model loaded
     st.success(f"✅ {model_name} berhasil dimuat!")
+    
+    # Debug: Show feature names that model expects
+    try:
+        if hasattr(model, 'feature_names_in_'):
+            st.info(f"🔍 Model expects these features: {list(model.feature_names_in_)}")
+        elif hasattr(model, 'n_features_'):
+            st.info(f"🔍 Model expects {model.n_features_} features")
+    except:
+        pass
     
     # Sidebar untuk input
     st.sidebar.header("📋 Input Data Responden")
