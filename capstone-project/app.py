@@ -74,27 +74,40 @@ def load_model():
         file_size = os.path.getsize(file) if os.path.isfile(file) else "folder"
         st.write(f"• {file} ({file_size} bytes)")
     
+    # Cek isi folder capstone-project
+    if os.path.exists('capstone-project'):
+        st.write("\n📂 **Files in capstone-project folder:**")
+        capstone_files = os.listdir('capstone-project')
+        for file in sorted(capstone_files):
+            file_path = os.path.join('capstone-project', file)
+            file_size = os.path.getsize(file_path) if os.path.isfile(file_path) else "folder"
+            st.write(f"• {file} ({file_size} bytes)")
+    
     try:
+        # Path yang benar - ada di subfolder capstone-project
+        model_path = 'capstone-project/model_obesitas_optimal.pkl'
+        scaler_path = 'capstone-project/scaler.pkl'
+        
         # Cek apakah file ada
-        if not os.path.exists('model_obesitas_optimal.pkl'):
-            st.error("❌ model_obesitas_optimal.pkl TIDAK DITEMUKAN!")
+        if not os.path.exists(model_path):
+            st.error(f"❌ {model_path} TIDAK DITEMUKAN!")
             return None, None, None
             
-        if not os.path.exists('scaler.pkl'):
-            st.error("❌ scaler.pkl TIDAK DITEMUKAN!")
+        if not os.path.exists(scaler_path):
+            st.error(f"❌ {scaler_path} TIDAK DITEMUKAN!")
             return None, None, None
         
-        st.success("✅ Kedua file ditemukan!")
+        st.success("✅ Kedua file ditemukan di capstone-project folder!")
         
         # Load model optimal
         st.write("🔄 Loading model...")
-        model = pickle.load(open('model_obesitas_optimal.pkl', 'rb'))
+        model = pickle.load(open(model_path, 'rb'))
         model_name = "Model Obesitas Optimal"
         st.success(f"✅ Model loaded: {type(model).__name__}")
         
         # Load scaler
         st.write("🔄 Loading scaler...")
-        scaler = pickle.load(open('scaler.pkl', 'rb'))
+        scaler = pickle.load(open(scaler_path, 'rb'))
         st.success(f"✅ Scaler loaded: {type(scaler).__name__}")
         
         return model, scaler, model_name
