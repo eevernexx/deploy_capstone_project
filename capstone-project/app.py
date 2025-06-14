@@ -66,29 +66,46 @@ st.markdown("""
 # Load model dan preprocessing objects
 @st.cache_resource
 def load_model():
+    import os
+    
+    # Debug: Cek file yang ada
+    st.write("🔍 **Debug - Files in root directory:**")
+    root_files = os.listdir('.')
+    for file in sorted(root_files):
+        if file.endswith('.pkl'):
+            file_size = os.path.getsize(file)
+            st.write(f"• {file}: {file_size} bytes")
+    
     try:
-        # HANYA load model simple - ga ada fallback lagi!
-        model = pickle.load(open('capstone-project/model_obesitas_optimal.pkl', 'rb'))
-        scaler = pickle.load(open('capstone-project/scaler.pkl', 'rb'))
-        label_encoders = pickle.load(open('capstone-project/label_encoders.pkl', 'rb'))
-        feature_names = pickle.load(open('capstone-project/feature_names.pkl', 'rb'))
+        # Load dari ROOT directory (bukan subfolder)
+        st.write("🔄 Loading model files from root directory...")
+        
+        model = pickle.load(open('model_simple.pkl', 'rb'))
+        st.success("✅ model_simple.pkl loaded")
+        
+        scaler = pickle.load(open('scaler_simple.pkl', 'rb'))
+        st.success("✅ scaler_simple.pkl loaded")
+        
+        label_encoders = pickle.load(open('label_encoders.pkl', 'rb'))
+        st.success("✅ label_encoders.pkl loaded")
+        
+        feature_names = pickle.load(open('feature_names.pkl', 'rb'))
+        st.success("✅ feature_names.pkl loaded")
+        
         model_name = "Model Simple (Compatible)"
+        
+        st.success("🎉 ALL FILES LOADED SUCCESSFULLY!")
         
         return model, scaler, label_encoders, feature_names, model_name
         
     except FileNotFoundError as e:
-        st.error("❌ Model simple files tidak ditemukan!")
-        st.error(f"Missing file: {str(e)}")
-        st.error("📁 File yang WAJIB ada:")
-        st.error("• model_simple.pkl")
-        st.error("• scaler_simple.pkl") 
-        st.error("• label_encoders.pkl")
-        st.error("• feature_names.pkl")
-        st.info("💡 Pastikan semua file udah diupload ke folder capstone-project/")
+        st.error(f"❌ File tidak ditemukan: {str(e)}")
+        st.error("Pastikan file ada di root directory repository")
         return None, None, None, None, None
         
     except Exception as e:
-        st.error(f"❌ Error loading model: {str(e)}")
+        st.error(f"❌ Error loading: {str(e)}")
+        st.error(f"Error type: {type(e).__name__}")
         return None, None, None, None, None
 
 # Function untuk preprocessing input - SIMPLE VERSION
