@@ -1,4 +1,11 @@
-import streamlit as st
+# Enhanced recommendations
+                st.markdown("### 💡 Rekomendasi Personal AI")
+                
+                if predicted_level == 'Normal_Weight':
+                    st.success("🎉 **Excellent!** Berat badan Anda dalam kategori ideal. Pertahankan pola hidup sehat ini!")
+                    st.info("✨ **Tips Maintenance:** Lanjutkan olahraga rutin, pola makan seimbang, dan jaga hidrasi tubuh.")
+                elif predicted_level == 'Insufficient_Weight':
+                    st.info("📈 **Action Plan:** Program penimport streamlit as st
 import pandas as pd
 import numpy as np
 import pickle
@@ -326,63 +333,38 @@ def preprocess_input_smart(data, label_encoders, feature_names):
     df_final = df[feature_names]
     return df_final
 
-# Create BMI progress bar visualization
+# Create simple BMI display without complex HTML
 def create_bmi_display(bmi_value):
-    # BMI categories with colors
-    bmi_ranges = [
-        (0, 18.5, "Underweight", "#74c0fc"),
-        (18.5, 25, "Normal", "#51cf66"),
-        (25, 30, "Overweight", "#ffd43b"),
-        (30, 40, "Obese", "#ff6b6b")
-    ]
+    # BMI categories
+    if bmi_value < 18.5:
+        category = "Underweight"
+        color = "#74c0fc"
+        emoji = "🔵"
+    elif 18.5 <= bmi_value < 25:
+        category = "Normal"
+        color = "#51cf66"
+        emoji = "🟢"
+    elif 25 <= bmi_value < 30:
+        category = "Overweight"
+        color = "#ffd43b"
+        emoji = "🟡"
+    else:
+        category = "Obese"
+        color = "#ff6b6b"
+        emoji = "🔴"
     
-    # Determine current category
-    current_category = "Unknown"
-    current_color = "#666"
-    
-    for min_val, max_val, category, color in bmi_ranges:
-        if min_val <= bmi_value < max_val:
-            current_category = category
-            current_color = color
-            break
-    
-    # Calculate position for indicator
-    position_percent = min(max((bmi_value/40)*100, 0), 100)
-    
-    # Create BMI visualization using Streamlit components
+    # Simple but elegant display
     st.markdown(f"""
-    <div style="background: white; padding: 1.5rem; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin: 1rem 0;">
-        <div style="text-align: center; margin-bottom: 1rem;">
-            <h3 style="color: #333; margin: 0; font-family: 'Poppins', sans-serif;">BMI Score</h3>
-            <div style="font-size: 2.5rem; font-weight: 700; color: {current_color}; margin: 0.5rem 0; font-family: 'Poppins', sans-serif;">
-                {bmi_value:.1f}
-            </div>
-            <div style="font-size: 1.2rem; color: {current_color}; font-weight: 600; font-family: 'Poppins', sans-serif;">
-                {current_category}
-            </div>
-        </div>
-        
-        <div style="background: #f8f9fa; border-radius: 10px; padding: 1rem; margin-top: 1rem;">
-            <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 0.5rem; font-family: 'Poppins', sans-serif;">
-                <span>Under</span>
-                <span>Normal</span>
-                <span>Over</span>
-                <span>Obese</span>
-            </div>
-            <div style="height: 20px; background: linear-gradient(to right, #74c0fc 0%, #74c0fc 18.5%, #51cf66 18.5%, #51cf66 25%, #ffd43b 25%, #ffd43b 30%, #ff6b6b 30%, #ff6b6b 100%); border-radius: 10px; position: relative;">
-                <div style="position: absolute; top: -5px; left: {position_percent}%; width: 10px; height: 30px; background: #333; border-radius: 5px; transform: translateX(-50%); box-shadow: 0 2px 6px rgba(0,0,0,0.3);"></div>
-            </div>
-            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-top: 0.5rem; color: #666; font-family: 'Poppins', sans-serif;">
-                <span>18.5</span>
-                <span>25</span>
-                <span>30</span>
-                <span>40+</span>
-            </div>
+    <div class="metric-card">
+        <div class="metric-label">BMI Score</div>
+        <div class="metric-value">{bmi_value:.1f}</div>
+        <div style="margin-top: 0.5rem; font-size: 1.1rem;">
+            {emoji} <strong>{category}</strong>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-# Create prediction confidence chart using Streamlit bar chart
+# Create simple confidence display
 def create_confidence_display(prediction_proba, obesity_levels, predicted_level):
     st.markdown("### 🎯 AI Confidence Distribution")
     
@@ -395,45 +377,28 @@ def create_confidence_display(prediction_proba, obesity_levels, predicted_level)
     # Sort by confidence
     conf_data = conf_data.sort_values('Confidence', ascending=False)
     
-    # Display as horizontal bars with custom styling
-    for idx, row in conf_data.iterrows():
+    # Translation for display
+    level_translation = {
+        'Insufficient_Weight': 'Berat Badan Kurang',
+        'Normal_Weight': 'Berat Badan Normal',
+        'Overweight_Level_I': 'Kelebihan BB Tingkat I',
+        'Overweight_Level_II': 'Kelebihan BB Tingkat II',
+        'Obesity_Type_I': 'Obesitas Tipe I',
+        'Obesity_Type_II': 'Obesitas Tipe II',
+        'Obesity_Type_III': 'Obesitas Tipe III'
+    }
+    
+    # Show top 3 predictions
+    st.markdown("**Top 3 Predictions:**")
+    for i, (idx, row) in enumerate(conf_data.head(3).iterrows()):
         category = row['Category']
         confidence = row['Confidence']
-        
-        # Highlight the predicted category
-        if category == predicted_level:
-            bar_color = "#667eea"
-            text_weight = "bold"
-            bg_color = "rgba(102, 126, 234, 0.1)"
-        else:
-            bar_color = "#e9ecef"
-            text_weight = "normal"
-            bg_color = "transparent"
-        
-        # Translation for display
-        level_translation = {
-            'Insufficient_Weight': 'Berat Badan Kurang',
-            'Normal_Weight': 'Berat Badan Normal',
-            'Overweight_Level_I': 'Kelebihan BB Tingkat I',
-            'Overweight_Level_II': 'Kelebihan BB Tingkat II',
-            'Obesity_Type_I': 'Obesitas Tipe I',
-            'Obesity_Type_II': 'Obesitas Tipe II',
-            'Obesity_Type_III': 'Obesitas Tipe III'
-        }
-        
         display_name = level_translation.get(category, category)
         
-        st.markdown(f"""
-        <div style="background: {bg_color}; padding: 0.5rem; border-radius: 8px; margin: 0.3rem 0;">
-            <div style="display: flex; justify-content: space-between; align-items: center; font-weight: {text_weight};">
-                <span style="color: #333; font-size: 0.9rem;">{display_name}</span>
-                <span style="color: {bar_color}; font-weight: bold;">{confidence:.1f}%</span>
-            </div>
-            <div style="background: #f1f3f4; height: 8px; border-radius: 4px; margin-top: 0.3rem;">
-                <div style="background: {bar_color}; height: 100%; width: {confidence}%; border-radius: 4px; transition: width 0.5s ease;"></div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+        if category == predicted_level:
+            st.success(f"🏆 **{display_name}**: {confidence:.1f}%")
+        else:
+            st.info(f"#{i+1} {display_name}: {confidence:.1f}%")
 
 # Main app
 def main():
@@ -456,30 +421,19 @@ def main():
         st.stop()
     
     # Success message with animation
-    st.markdown(f"""
-    <div class="main-container success-animation">
-        <h3 style="color: #51cf66; text-align: center; font-weight: 600;">
-            ✅ {model_name} Ready! 🚀
-        </h3>
-    </div>
-    """, unsafe_allow_html=True)
+    st.success(f"✅ {model_name} Ready! 🚀")
     
     # Sidebar untuk input dengan styling
     with st.sidebar:
-        st.markdown("""
-        <div style="text-align: center; padding: 1rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px; color: white; margin-bottom: 2rem;">
-            <h2>📋 Data Input</h2>
-            <p>Lengkapi semua informasi di bawah ini</p>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown("### 📋 Input Data Responden")
+        st.markdown("*Silakan lengkapi semua informasi di bawah ini*")
     
     # Main content area
     col1, col2 = st.columns([2, 1])
     
     with col1:
         # Input sections with modern cards
-        st.markdown('<div class="input-container">', unsafe_allow_html=True)
-        st.markdown('<h3 class="section-header">👤 Informasi Personal</h3>', unsafe_allow_html=True)
+        st.subheader("👤 Informasi Personal")
         
         input_col1, input_col2 = st.columns(2)
         with input_col1:
@@ -488,18 +442,14 @@ def main():
         with input_col2:
             height = st.number_input("📏 Tinggi Badan (m)", 1.45, 1.98, 1.70, step=0.01, format="%.2f", key="height")
             weight = st.number_input("⚖️ Berat Badan (kg)", 39.0, 173.0, 70.0, step=0.1, format="%.1f", key="weight")
-        st.markdown('</div>', unsafe_allow_html=True)
         
-        st.markdown('<div class="input-container">', unsafe_allow_html=True)
-        st.markdown('<h3 class="section-header">👨‍👩‍👧‍👦 Riwayat Keluarga</h3>', unsafe_allow_html=True)
+        st.subheader("👨‍👩‍👧‍👦 Riwayat Keluarga")
         family_history = st.selectbox(
             "🧬 Apakah ada anggota keluarga yang pernah/sedang mengalami kelebihan berat badan?", 
             ["no", "yes"], key="family"
         )
-        st.markdown('</div>', unsafe_allow_html=True)
         
-        st.markdown('<div class="input-container">', unsafe_allow_html=True)
-        st.markdown('<h3 class="section-header">🍽️ Pola Makan</h3>', unsafe_allow_html=True)
+        st.subheader("🍽️ Pola Makan")
         
         food_col1, food_col2 = st.columns(2)
         with food_col1:
@@ -508,10 +458,8 @@ def main():
         with food_col2:
             ncp = st.number_input("🍽️ Jumlah makan besar per hari", 1.0, 4.0, 3.0, step=1.0, key="ncp")
             caec = st.selectbox("🍿 Frekuensi ngemil", ["no", "Sometimes", "Frequently", "Always"], key="caec")
-        st.markdown('</div>', unsafe_allow_html=True)
         
-        st.markdown('<div class="input-container">', unsafe_allow_html=True)
-        st.markdown('<h3 class="section-header">🏃‍♂️ Aktivitas & Lifestyle</h3>', unsafe_allow_html=True)
+        st.subheader("🏃‍♂️ Aktivitas & Lifestyle")
         
         activity_col1, activity_col2 = st.columns(2)
         with activity_col1:
@@ -525,7 +473,6 @@ def main():
         
         mtrans = st.selectbox("🚗 Jenis transportasi utama", 
                              ["Walking", "Bike", "Motorbike", "Public_Transportation", "Automobile"], key="transport")
-        st.markdown('</div>', unsafe_allow_html=True)
     
     with col2:
         # Quick BMI preview
@@ -542,11 +489,7 @@ def main():
             create_bmi_display(bmi_preview)
     
     # Predict button with enhanced styling
-    if st.button("🔍 ANALISIS DENGAN AI", key="predict_btn"):
-        # Create loading animation
-        with st.container():
-            st.markdown('<div class="loading-spinner"></div>', unsafe_allow_html=True)
-            
+    if st.button("🔍 ANALISIS DENGAN AI", type="primary"):
         with st.spinner("🤖 AI sedang menganalisis data Anda..."):
             # Prepare input data
             input_data = {
@@ -580,11 +523,7 @@ def main():
                 
                 # Results section
                 st.markdown("---")
-                st.markdown("""
-                <div style="text-align: center; margin: 2rem 0;">
-                    <h2 style="color: #333; font-weight: 600;">🎯 Hasil Analisis AI</h2>
-                </div>
-                """, unsafe_allow_html=True)
+                st.markdown("## 🎯 Hasil Analisis AI")
                 
                 # Color coding and status
                 if predicted_level in ['Insufficient_Weight', 'Normal_Weight']:
@@ -645,17 +584,12 @@ def main():
                     else:
                         bmi_category, bmi_color = "Obese", "🔴"
                     
-                    st.markdown(f"""
-                    <div style="text-align: center; color: #333; font-size: 1.1rem; margin-top: 1rem;">
-                        {bmi_color} <strong>{bmi_category}</strong>
-                    </div>
-                    """, unsafe_allow_html=True)
+                    st.markdown(f"**{bmi_color} {bmi_category}**")
                 
                 # Confidence distribution chart
                 create_confidence_display(prediction_proba, obesity_levels, predicted_level)
                 
                 # Enhanced recommendations
-                st.markdown('<div class="recommendation-card">', unsafe_allow_html=True)
                 st.markdown("### 💡 Rekomendasi Personal AI")
                 
                 if predicted_level == 'Normal_Weight':
@@ -671,27 +605,24 @@ def main():
                     st.error("🏥 **Medical Attention Required:** Konsultasi medis segera diperlukan untuk program penurunan berat badan yang aman dan efektif.")
                     st.warning("⚠️ **Important:** Kondisi ini dapat meningkatkan risiko penyakit kardiovaskular, diabetes, dan komplikasi kesehatan lainnya.")
                 
-                st.markdown('</div>', unsafe_allow_html=True)
-                
             except Exception as e:
                 st.error(f"❌ Error dalam prediksi: {str(e)}")
                 st.write("Silakan periksa input data Anda dan coba lagi.")
     
     # Enhanced Footer
+    st.markdown("---")
     st.markdown("""
-    <div class="footer">
-        <h3>🎓 Capstone Project - AI Health Analytics</h3>
-        <p><strong>Bengkel Koding Data Science</strong></p>
-        <p>🏛️ Universitas Dian Nuswantoro | 📅 Semester Genap 2024/2025</p>
-        <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.3);">
-            <p><em>⚠️ Disclaimer: Hasil prediksi AI ini adalah untuk tujuan edukasi dan penelitian. 
-            Tidak menggantikan konsultasi medis profesional. Selalu konsultasikan kondisi kesehatan Anda dengan dokter.</em></p>
-        </div>
-        <div style="margin-top: 1rem;">
-            <p>🤖 Powered by Advanced Machine Learning • 🔬 Built with Streamlit & Python</p>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    ### 🎓 Capstone Project - AI Health Analytics
+    **Bengkel Koding Data Science**  
+    🏛️ Universitas Dian Nuswantoro | 📅 Semester Genap 2024/2025
+    
+    ---
+    
+    *⚠️ Disclaimer: Hasil prediksi AI ini adalah untuk tujuan edukasi dan penelitian. 
+    Tidak menggantikan konsultasi medis profesional. Selalu konsultasikan kondisi kesehatan Anda dengan dokter.*
+    
+    🤖 Powered by Advanced Machine Learning • 🔬 Built with Streamlit & Python
+    """)
 
 if __name__ == "__main__":
     main()
