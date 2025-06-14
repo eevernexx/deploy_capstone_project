@@ -68,8 +68,8 @@ st.markdown("""
 def load_model():
     try:
         # HANYA load model simple - ga ada fallback lagi!
-        model = pickle.load(open('capstone-project/model_simple.pkl', 'rb'))
-        scaler = pickle.load(open('capstone-project/scaler_simple.pkl', 'rb'))
+        model = pickle.load(open('capstone-project/model_obesitas_optimal.pkl', 'rb'))
+        scaler = pickle.load(open('capstone-project/scaler.pkl', 'rb'))
         label_encoders = pickle.load(open('capstone-project/label_encoders.pkl', 'rb'))
         feature_names = pickle.load(open('capstone-project/feature_names.pkl', 'rb'))
         model_name = "Model Simple (Compatible)"
