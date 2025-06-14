@@ -604,7 +604,7 @@ def main():
                 else:  # Obesity types
                     st.error("🏥 **Medical Attention Required:** Konsultasi medis segera diperlukan untuk program penurunan berat badan yang aman dan efektif.")
                     st.warning("⚠️ **Important:** Kondisi ini dapat meningkatkan risiko penyakit kardiovaskular, diabetes, dan komplikasi kesehatan lainnya.")
-                
+                    
             except Exception as e:
                 st.error(f"❌ Error dalam prediksi: {str(e)}")
                 st.write("Silakan periksa input data Anda dan coba lagi.")
