@@ -201,9 +201,22 @@ def main():
     # Success message if model loaded
     st.success(f"✅ {model_name} berhasil dimuat!")
     
+    # Debug: Show which files were loaded
+    st.write("🔍 **Debug - Files loaded:**")
+    if label_encoders and feature_names:
+        st.write("• model_simple.pkl ✅")
+        st.write("• scaler_simple.pkl ✅") 
+        st.write("• label_encoders.pkl ✅")
+        st.write("• feature_names.pkl ✅")
+        st.success("🎉 Using NEW SIMPLE MODEL!")
+    else:
+        st.write("• model_obesitas_optimal.pkl ⚠️")
+        st.write("• scaler.pkl ⚠️")
+        st.warning("⚠️ Using OLD MODEL - may have compatibility issues")
+    
     # Show model info
     if feature_names:
-        st.info(f"🔍 Model menggunakan {len(feature_names)} features")
+        st.info(f"🔍 Model menggunakan {len(feature_names)} features: {feature_names}")
     
     # Debug: Show feature names that model expects
     try:
