@@ -186,8 +186,8 @@ def main():
         st.subheader("👤 Informasi Dasar")
         gender = st.selectbox("Jenis Kelamin", ["Female", "Male"])
         age = st.slider("Usia (tahun)", 14, 61, 25)
-        height = st.number_input("Tinggi Badan (m)", 1.45, 1.98, 1.70, step=0.01, format="%.2f")
-        weight = st.number_input("Berat Badan (kg)", 39.0, 173.0, 70.0, step=0.1, format="%.1f")
+        height = st.number_input("Tinggi Badan (m)", 1.45, 3.00, 1.70, step=0.01, format="%.2f")
+        weight = st.number_input("Berat Badan (kg)", 39, 200, 70, step=1)
         
         st.subheader("👨‍👩‍👧‍👦 Riwayat Keluarga")
         family_history = st.selectbox(
@@ -198,8 +198,8 @@ def main():
     with col2:
         st.subheader("🍽️ Kebiasaan Makan")
         favc = st.selectbox("Apakah Anda sering mengonsumsi makanan tinggi kalori?", ["no", "yes"])
-        fcvc = st.number_input("Seberapa sering Anda makan sayuran? (1=jarang, 3=sering)", 1.0, 3.0, 2.0, step=0.1)
-        ncp = st.number_input("Berapa kali Anda makan besar dalam sehari?", 1.0, 4.0, 3.0, step=1.0)
+        fcvc = st.slider("Seberapa sering Anda makan sayuran? (1=jarang, 3=sering)", 1, 3, 2)
+        ncp = st.slider("Berapa kali Anda makan besar dalam sehari?", 1, 4, 3)
         caec = st.selectbox("Apakah Anda makan camilan di antara waktu makan?", 
                            ["no", "Sometimes", "Frequently", "Always"])
         
@@ -208,15 +208,15 @@ def main():
     with col3:
         st.subheader("🚭 Gaya Hidup")
         smoke = st.selectbox("Apakah Anda merokok?", ["no", "yes"])
-        ch2o = st.number_input("Berapa liter air yang Anda minum setiap hari?", 1.0, 3.0, 2.0, step=0.1)
+        ch2o = st.slider("Berapa liter air yang Anda minum setiap hari?", 1, 3, 2)
         scc = st.selectbox("Apakah Anda memantau asupan kalori harian?", ["no", "yes"])
         
     with col4:
         st.subheader("🏃‍♂️ Aktivitas")
-        faf = st.number_input("Seberapa sering Anda melakukan aktivitas fisik? (0=tidak pernah, 3=sangat sering)", 
-                             0.0, 3.0, 1.0, step=0.1)
-        tue = st.number_input("Berapa jam Anda menggunakan perangkat teknologi per hari?", 
-                             0.0, 2.0, 1.0, step=0.1)
+        faf = st.slider("Seberapa sering Anda melakukan aktivitas fisik? (0=tidak pernah, 3=sangat sering)", 
+                       0, 3, 1)
+        tue = st.slider("Berapa jam Anda menggunakan perangkat teknologi per hari?", 
+                       0, 24, 1)
         calc = st.selectbox("Seberapa sering Anda mengonsumsi alkohol?", 
                            ["no", "Sometimes", "Frequently", "Always"])
         mtrans = st.selectbox("Jenis transportasi apa yang biasa Anda gunakan?", 
@@ -231,17 +231,17 @@ def main():
                 'Gender': gender,
                 'Age': age,
                 'Height': height,
-                'Weight': weight,
+                'Weight': float(weight),  # Convert to float for calculations
                 'family_history_with_overweight': family_history,
                 'FAVC': favc,
-                'FCVC': fcvc,
-                'NCP': ncp,
+                'FCVC': float(fcvc),  # Convert to float for model
+                'NCP': float(ncp),    # Convert to float for model
                 'CAEC': caec,
                 'SMOKE': smoke,
-                'CH2O': ch2o,
+                'CH2O': float(ch2o),  # Convert to float for model
                 'SCC': scc,
-                'FAF': faf,
-                'TUE': tue,
+                'FAF': float(faf),    # Convert to float for model
+                'TUE': float(tue),    # Convert to float for model
                 'CALC': calc,
                 'MTRANS': mtrans
             }
